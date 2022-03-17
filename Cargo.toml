@@ -1,0 +1,32 @@
+[package]
+name = "electricui-embedded"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/jonlamb-gh/electricui-embedded-rs"
+description = "An unofficial and incomplete `no_std` Rust library for implementing the ElectricUI Binary Protocol"
+documentation = "https://docs.rs/electricui-embedded"
+categories = ["no-std"]
+
+[dependencies]
+crc = "2.1"
+corncobs = "0.1"
+
+[dependencies.err-derive]
+version = "0.3"
+default-features = false
+features = []
+
+[dependencies.static_assertions]
+version = "1.1"
+default-features = false
+features = []
+
+[dependencies.byteorder]
+version = "1.4"
+default-features = false
+features = []
+
+[dev-dependencies]
+pretty_assertions = "1.1"
+approx = "0.5"
