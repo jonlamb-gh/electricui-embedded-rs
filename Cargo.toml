@@ -2,6 +2,7 @@
 name = "electricui-embedded"
 version = "0.1.0"
 edition = "2021"
+authors = ["Jon Lamb"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jonlamb-gh/electricui-embedded-rs"
 description = "An unofficial and incomplete `no_std` Rust library for implementing the ElectricUI Binary Protocol"

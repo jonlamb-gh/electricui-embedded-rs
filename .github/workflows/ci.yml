@@ -1,0 +1,189 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust: [stable]
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache target
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-cargo--${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          components: clippy, rustfmt
+          toolchain: ${{ matrix.rust }}
+          override: true
+
+      - name: Test Documentation
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --doc --all-features
+
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+
+      - name: Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Doc Generation
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --all-features
+
+      #- name: Build examples
+      #  uses: marcopolo/cargo@master
+      #  with:
+      #    command: build
+      #    working-directory: examples
+      #    args: --release
+
+      #- name: Clippy examples
+      #  uses: marcopolo/cargo@master
+      #  with:
+      #    command: clippy
+      #    working-directory: examples
+
+      #- name: Format examples
+      #  uses: marcopolo/cargo@master
+      #  with:
+      #    command: fmt
+      #    working-directory: examples
+      #    args: --all -- --check
+
+  no-std:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust: [stable, nightly]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        target: [thumbv7em-none-eabi]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache target
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-cargo--${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          components: clippy
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Build debug lib
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=${{ matrix.target }}
+
+      - name: Build release lib
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target=${{ matrix.target }}
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust: [stable, nightly]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache target
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-cargo--${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          components: clippy
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Test Library
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features -- --test-threads=1
+
+  cross-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust: [stable]
+        os: [ubuntu-latest]
+        target: [armv7-unknown-linux-gnueabihf, mips64-unknown-linux-gnuabi64]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Cache target
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-cargo--${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          components: clippy
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Test Library
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --all-features --target=${{ matrix.target }} -- --test-threads=1

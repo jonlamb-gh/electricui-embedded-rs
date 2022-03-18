@@ -1,4 +1,4 @@
-//! A framing wrapper around https://crates.io/crates/corncobs
+//! A framing wrapper around <https://crates.io/crates/corncobs>
 
 use err_derive::Error;
 
