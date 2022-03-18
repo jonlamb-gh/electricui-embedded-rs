@@ -1,3 +1,4 @@
+use crate::sealed;
 use crate::wire::{packet, Packet};
 use err_derive::Error;
 
@@ -42,9 +43,9 @@ pub struct Decoder<'buf, const N: usize> {
     packet_storage: &'buf mut [u8; N],
 }
 
-// TODO - bounds on N, <= Packet::MAX_PACKET_SIZE, probably just >= Packet::BASE_PACKET_SIZE
 impl<'buf, const N: usize> Decoder<'buf, N> {
     pub fn new(packet_storage: &'buf mut [u8; N]) -> Self {
+        sealed::greater_than_eq::<N, { Packet::<&[u8]>::BASE_PACKET_SIZE }>();
         Self {
             state: State::FrameOffset,
             frame_offset: 0,
@@ -64,7 +65,7 @@ impl<'buf, const N: usize> Decoder<'buf, N> {
     pub fn reset(&mut self) {
         self.state = State::FrameOffset;
         self.frame_offset = 0;
-        // TODO - maybe other fields
+        self.bytes_read = 0;
     }
 
     pub fn count(&self) -> usize {
@@ -116,8 +117,7 @@ impl<'buf, const N: usize> Decoder<'buf, N> {
                 self.id_bytes_read = self.id_bytes_read.saturating_add(1);
                 if self.id_bytes_read >= self.id_len {
                     if self.offset {
-                        // self.state = State::OffsetB0
-                        todo!("Add support for split/offset packets");
+                        self.state = State::OffsetB0
                     } else if self.data_len > 0 {
                         self.data_bytes_read = 0;
                         self.state = State::Payload;
@@ -127,10 +127,14 @@ impl<'buf, const N: usize> Decoder<'buf, N> {
                 }
             }
             State::OffsetB0 => {
-                todo!("Add support for split/offset packets");
+                // TODO - Add support for split/offset packets
+                self.feed(byte)?;
+                self.state = State::OffsetB1;
             }
             State::OffsetB1 => {
-                todo!("Add support for split/offset packets");
+                // TODO - Add support for split/offset packets
+                self.feed(byte)?;
+                self.state = State::Payload;
             }
             State::Payload => {
                 self.feed(byte)?;

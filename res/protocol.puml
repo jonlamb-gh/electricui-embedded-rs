@@ -1,0 +1,95 @@
+@startuml
+
+Title ElectricUI Protocol
+
+participant "Host" as Host
+participant "Target" as Target
+
+== Device Discovery ==
+
+Host -> Target: Board ID request
+hnote over Target
+    { DataLen(0), Type(8), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0), Id('i') }
+endhnote
+|||
+Target --> Host: Board ID response
+hnote over Host
+    { DataLen(2), Type(8), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0), Id('i'), Data(0xBEEF) }
+endhnote
+|||
+Host -> Target: Message "name" request
+hnote over Target
+    { DataLen(0), Type(0), Int(0), Offset(0), IdLen(4), Resp(1), Acknum(0), Id('name') }
+endhnote
+|||
+Target --> Host: Message "name" response
+hnote over Host
+    { DataLen(8), Type(4), Int(0), Offset(0), IdLen(4), Resp(0), Acknum(0), Id('name'), Data('my-board') }
+endhnote
+
+== Handshake ==
+
+Host -> Target: Announce writable IDs request
+hnote over Target
+    { DataLen(0), Type(0), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0), Id('t') }
+endhnote
+|||
+Target --> Host: Delimit writable ID response(s)
+hnote over Host
+    { DataLen(34), Type(1), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0), Id('u'), Data(...) }
+endhnote
+|||
+Target --> Host: End of writable IDs response
+hnote over Host
+    { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0), Id('v'), Data(num_ids) }
+endhnote
+|||
+Host -> Target: Send writable variables request
+hnote over Target
+    { DataLen(0), Type(0), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0), Id('w') }
+endhnote
+|||
+Target --> Host: Writable variables response(s)
+hnote over Host
+    { DataLen(1), Type(6), Int(0), Offset(0), IdLen(9), Resp(0), Acknum(0), Id('led_blink'), Data(0) }
+endhnote
+
+== Repetition: Heartbeat ==
+
+Host -> Target: Heartbeat request
+hnote over Target
+    { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0), Id('h'), Data(2) }
+endhnote
+|||
+Target --> Host: Heartbeat response
+hnote right #FFAAAA: Must respond with the request's heartbeat value (u8)
+hnote over Host
+    { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0), Id('h'), Data(2) }
+endhnote
+
+== Repetition: Query ==
+
+Host -> Target: Query request
+hnote over Target
+    { DataLen(0), Type(6), Int(0), Offset(0), IdLen(9), Resp(1), Acknum(0), Id('led_state') }
+endhnote
+|||
+Target --> Host: Query response
+hnote over Host
+    { DataLen(1), Type(6), Int(0), Offset(0), IdLen(9), Resp(0), Acknum(0), Id('led_state'), Data(1) }
+endhnote
+
+== Repetition: Action ==
+
+Host -> Target: Action request (callback event or data)
+hnote over Target
+    { DataLen(2), Type(8), Int(0), Offset(0), IdLen(8), Resp(1), Acknum(1), Id('lit_time'), Data(22) }
+endhnote
+hnote right #aqua: Set's variable named 'lit_time' = 22
+|||
+Target --> Host: Action response
+hnote over Host
+    { DataLen(2), Type(8), Int(0), Offset(0), IdLen(8), Resp(0), Acknum(0), Id('lit_time'), Data(22) }
+endhnote
+
+@enduml

@@ -13,12 +13,27 @@ impl<'a> MessageId<'a> {
     pub const INTERNAL_BOARD_ID: Self = MessageId(b"i");
     pub const INTERNAL_HEARTBEAT: Self = MessageId(b"h");
 
+    /// Announce writable ID's
+    pub const INTERNAL_AM: Self = MessageId(b"t");
+    /// Delimit writable ID
+    pub const INTERNAL_AM_LIST: Self = MessageId(b"u");
+    /// End of writable ID's
+    pub const INTERNAL_AM_END: Self = MessageId(b"v");
+    /// Send writable variables
+    pub const INTERNAL_AV: Self = MessageId(b"w");
+
     pub const fn new(id: &'a [u8]) -> Option<Self> {
         if id.is_empty() || id.len() > Self::MAX_SIZE || (id.len() == 1 && id[0] == 0) {
             None
         } else {
             Some(Self(id))
         }
+    }
+
+    /// # Safety
+    /// Must follow the rules
+    pub const unsafe fn new_unchecked(id: &'a [u8]) -> Self {
+        Self(id)
     }
 
     pub const fn as_bytes(&self) -> &[u8] {
@@ -31,6 +46,11 @@ impl<'a> MessageId<'a> {
 
     pub fn from_utf8(s: &'a str) -> Self {
         Self(s.as_bytes())
+    }
+
+    #[allow(clippy::len_without_is_empty)]
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 }
 
@@ -89,9 +109,18 @@ impl<'a> fmt::Display for MessageId<'a> {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum MessageType {
     Callback,
+    Custom,
+    OffsetMetadata,
+    Byte,
+    Char,
+    I8,
     U8,
+    I16,
     U16,
+    I32,
+    U32,
     F32,
+    F64,
 }
 
 #[cfg(test)]

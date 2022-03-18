@@ -11,6 +11,10 @@ https://electricui.com/docs/
 
 https://electricui.com/docs/hardware/protocol
 
+## Protocol
+
+![protocol](res/protocol.png)
+
 ## License
 
 Licensed under either of

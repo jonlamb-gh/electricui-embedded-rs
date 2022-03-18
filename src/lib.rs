@@ -18,4 +18,5 @@ pub use crate::message::{MessageId, MessageType};
 pub mod decoder;
 mod error;
 mod message;
+mod sealed;
 pub mod wire;

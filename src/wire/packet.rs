@@ -121,6 +121,13 @@ impl<T: AsRef<[u8]>> Packet<T> {
         }
     }
 
+    #[inline]
+    pub fn wire_size(&self) -> Result<usize, Error> {
+        let id_len = self.id_length()?;
+        let data_len = usize::from(self.data_length());
+        Ok(Self::buffer_len(id_len, data_len))
+    }
+
     pub fn into_inner(self) -> T {
         self.buffer
     }
@@ -365,6 +372,7 @@ impl<T: AsRef<[u8]>> fmt::Display for Packet<T> {
 // round trip proptest
 // all the invalid cases, checksum, etc
 // see test_decode_packet, test_encode_packet_simple and others
+// add a len() method to return Packet::<&[u8]>::buffer_len(msg_id_len, data_len);
 
 #[cfg(test)]
 mod tests {
@@ -373,7 +381,7 @@ mod tests {
     use approx::assert_relative_eq;
     use pretty_assertions::assert_eq;
 
-    static MSG_U8: [u8; 9 + 2] = [
+    static MSG_I8: [u8; 9 + 2] = [
         0x0A, // framing
         0x01, 0x14, 0x63, // header
         0x61, 0x62, 0x63, // msgid
@@ -392,12 +400,12 @@ mod tests {
     ];
 
     #[test]
-    fn construct_u8() {
+    fn construct_i8() {
         let mut bytes = [0xFF; 9];
         let mut p = Packet::new_unchecked(&mut bytes[..]);
         assert!(p.check_len().is_ok());
         p.set_data_length(1).unwrap();
-        p.set_typ(MessageType::U8);
+        p.set_typ(MessageType::I8);
         p.set_internal(false);
         p.set_offset(false);
         p.set_id_length(3).unwrap();
@@ -408,25 +416,26 @@ mod tests {
         p.set_checksum(0xA3B8).unwrap();
         assert!(p.check_payload_length().is_ok());
         assert!(p.check_checksum().is_ok());
-        assert_eq!(&p.into_inner()[..], &MSG_U8[1..10]);
+        assert_eq!(p.wire_size(), Ok(9));
+        assert_eq!(&p.into_inner()[..], &MSG_I8[1..10]);
 
         let mut enc_bytes = [0xFF; 9 + 2];
         assert!(enc_bytes.len() == Framing::max_encoded_len(9));
         let size = Framing::encode_buf(&bytes[..], &mut enc_bytes[..]);
         assert_eq!(size, 9 + 2);
-        assert_eq!(&enc_bytes[..], &MSG_U8[..]);
+        assert_eq!(&enc_bytes[..], &MSG_I8[..]);
     }
 
     #[test]
-    fn deconstruct_u8() {
+    fn deconstruct_i8() {
         let mut bytes = [0xFF; 9];
-        let size = Framing::decode_buf(&MSG_U8[..], &mut bytes[..]).unwrap();
+        let size = Framing::decode_buf(&MSG_I8[..], &mut bytes[..]).unwrap();
         assert_eq!(size, bytes.len());
 
         assert_eq!(Packet::<&[u8]>::buffer_len(3, 1), bytes.len());
         let p = Packet::new(&bytes[..]).unwrap();
         assert_eq!(p.data_length(), 1);
-        assert_eq!(p.typ().unwrap(), MessageType::U8);
+        assert_eq!(p.typ().unwrap(), MessageType::I8);
         assert_eq!(p.internal(), false);
         assert_eq!(p.offset(), false);
         assert_eq!(p.id_length().unwrap(), 3);
@@ -436,6 +445,7 @@ mod tests {
         assert_eq!(p.payload().unwrap(), &[0x2A]);
         assert_eq!(p.checksum().unwrap(), 0xA3B8);
         assert_eq!(p.compute_checksum().unwrap(), 0xA3B8);
+        assert_eq!(p.wire_size(), Ok(9));
     }
 
     #[test]
@@ -455,6 +465,7 @@ mod tests {
         p.set_checksum(0x1D8B).unwrap();
         assert!(p.check_payload_length().is_ok());
         assert!(p.check_checksum().is_ok());
+        assert_eq!(p.wire_size(), Ok(12));
         assert_eq!(&p.into_inner()[..], &MSG_F32[1..13]);
 
         let mut enc_bytes = [0xFF; 12 + 2];
@@ -484,5 +495,6 @@ mod tests {
         assert_relative_eq!(LittleEndian::read_f32(p.payload().unwrap()), 42.42_f32);
         assert_eq!(p.checksum().unwrap(), 0x1D8B);
         assert_eq!(p.compute_checksum().unwrap(), 0x1D8B);
+        assert_eq!(p.wire_size(), Ok(12));
     }
 }
