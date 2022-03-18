@@ -1,4 +1,4 @@
-use crate::message::MessageType;
+use crate::message::{MessageId, MessageType};
 use byteorder::{ByteOrder, LittleEndian};
 use core::fmt;
 use crc::{Algorithm, Crc};
@@ -20,6 +20,9 @@ pub enum Error {
 
     #[error(display = "Invalid message ID length")]
     InvalidMessageIdLength,
+
+    #[error(display = "Invalid message ID")]
+    InvalidMessageId,
 
     #[error(display = "Invalid data length")]
     InvalidDataLength,
@@ -212,12 +215,18 @@ impl<T: AsRef<[u8]>> Packet<T> {
 
 impl<'a, T: AsRef<[u8]> + ?Sized> Packet<&'a T> {
     #[inline]
-    pub fn msg_id(&self) -> Result<&'a [u8], Error> {
+    pub fn msg_id_raw(&self) -> Result<&'a [u8], Error> {
         let id_len = self.id_length()?;
         let end = field::REST.start + id_len;
         let data = self.buffer.as_ref();
         debug_assert!(end <= data.len());
         Ok(&data[field::REST.start..end])
+    }
+
+    #[inline]
+    pub fn msg_id(&self) -> Result<MessageId<'a>, Error> {
+        let msg_id = self.msg_id_raw()?;
+        MessageId::new(msg_id).ok_or(Error::InvalidMessageId)
     }
 
     #[inline]
