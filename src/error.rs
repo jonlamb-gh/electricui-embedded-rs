@@ -7,4 +7,7 @@ pub enum Error {
 
     #[error(display = "Framing error. {}", _0)]
     Framing(crate::wire::framing::Error),
+
+    #[error(display = "Decoder error. {}", _0)]
+    Decoder(crate::decoder::Error),
 }

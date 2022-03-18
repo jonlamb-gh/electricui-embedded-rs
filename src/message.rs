@@ -99,6 +99,8 @@ mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
 
+    // TODO - happy/sad path tests
+
     #[test]
     fn internal_ids() {
         assert_eq!(MessageId::INTERNAL_LIB_VER, b"o");
