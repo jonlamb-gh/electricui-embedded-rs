@@ -22,6 +22,8 @@ impl<'a> MessageId<'a> {
     /// Send writable variables
     pub const INTERNAL_AV: Self = MessageId(b"w");
 
+    pub const BOARD_NAME: Self = MessageId(b"name");
+
     pub const fn new(id: &'a [u8]) -> Option<Self> {
         if id.is_empty() || id.len() > Self::MAX_SIZE || (id.len() == 1 && id[0] == 0) {
             None

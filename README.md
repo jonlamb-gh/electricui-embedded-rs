@@ -11,6 +11,10 @@ https://electricui.com/docs/
 
 https://electricui.com/docs/hardware/protocol
 
+## Example
+
+See [electricui-embedded-stm32f4-example](https://github.com/jonlamb-gh/electricui-embedded-stm32f4-example).
+
 ## Protocol
 
 ![protocol](res/protocol.png)
