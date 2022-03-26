@@ -48,7 +48,7 @@ mod field {
     pub const RESPONSE: usize = 2;
     pub const ACKNUM: usize = 2;
 
-    // Message ID bytes followed by maybe offset and packet payload
+    // Message ID bytes followed by maybe offset and maybe packet payload
     pub const REST: Rest = 3..;
     // Followed by 2 byte checksum
 }
@@ -368,12 +368,6 @@ impl<T: AsRef<[u8]>> fmt::Display for Packet<T> {
     }
 }
 
-// TODO - tests
-// round trip proptest
-// all the invalid cases, checksum, etc
-// see test_decode_packet, test_encode_packet_simple and others
-// add a len() method to return Packet::<&[u8]>::buffer_len(msg_id_len, data_len);
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -496,5 +490,98 @@ mod tests {
         assert_eq!(p.checksum().unwrap(), 0x1D8B);
         assert_eq!(p.compute_checksum().unwrap(), 0x1D8B);
         assert_eq!(p.wire_size(), Ok(12));
+    }
+
+    #[test]
+    fn buffer_len() {
+        assert_eq!(
+            Packet::<&[u8]>::buffer_len(1, 0),
+            Packet::<&[u8]>::BASE_PACKET_SIZE + 1
+        );
+        assert_eq!(
+            Packet::<&[u8]>::buffer_len(3, 4),
+            Packet::<&[u8]>::BASE_PACKET_SIZE + 3 + 4
+        );
+    }
+
+    #[test]
+    fn missing_header() {
+        let bytes = [0xFF; 5 - 3];
+        assert_eq!(bytes.len(), Packet::<&[u8]>::buffer_len(0, 0) - 3);
+        let p = Packet::new(&bytes[..]);
+        assert_eq!(p.unwrap_err(), Error::MissingHeader);
+    }
+
+    #[test]
+    fn missing_checksum() {
+        let bytes = [0xFF; 5 - 1];
+        assert_eq!(bytes.len(), Packet::<&[u8]>::buffer_len(0, 0) - 1);
+        let p = Packet::new(&bytes[..]);
+        assert_eq!(p.unwrap_err(), Error::MissingChecksum);
+    }
+
+    #[test]
+    fn incomplete_payload() {
+        let bytes = [0x04, 0x2c, 0x03, 0xFF, 0xFF];
+        let p = Packet::new(&bytes[..]);
+        assert_eq!(p.unwrap_err(), Error::IncompletePayload);
+    }
+
+    #[test]
+    fn invalid_checksum() {
+        let bytes = [0x01, 0x14, 0x63, 0x61, 0x62, 0x63, 0x2A, 0xB8, 0xA3 + 1];
+        let p = Packet::new(&bytes[..]);
+        assert_eq!(p.unwrap_err(), Error::InvalidChecksum);
+    }
+
+    #[test]
+    fn invalid_msg_id_len() {
+        let mut bytes = [0x01, 0x14, 0x63, 0x61, 0x62, 0x63, 0x2A, 0xB8, 0xA3];
+        let mut p = Packet::new(&mut bytes[..]).unwrap();
+        assert_eq!(
+            p.set_id_length(0).unwrap_err(),
+            Error::InvalidMessageIdLength
+        );
+        assert_eq!(
+            p.set_id_length(Packet::<&[u8]>::MAX_MSG_ID_SIZE as u8 + 1)
+                .unwrap_err(),
+            Error::InvalidMessageIdLength
+        );
+        bytes[field::ID_LEN] &= !0x0F; // zero
+        let p = Packet::new(&bytes[..]);
+        assert_eq!(p.unwrap_err(), Error::InvalidMessageIdLength);
+    }
+
+    #[test]
+    fn invalid_msg_id() {
+        let mut bytes = [0xFF; 7];
+        let mut p = Packet::new_unchecked(&mut bytes[..]);
+        assert!(p.check_len().is_ok());
+        p.set_data_length(0).unwrap();
+        p.set_typ(MessageType::Custom);
+        p.set_internal(false);
+        p.set_offset(false);
+        p.set_id_length(1).unwrap();
+        p.set_response(false);
+        p.set_acknum(0);
+        p.msg_id_mut().unwrap().copy_from_slice(&[0]); // zero invalid
+        p.set_checksum(p.compute_checksum().unwrap()).unwrap();
+        assert!(p.check_payload_length().is_ok());
+        assert!(p.check_checksum().is_ok());
+
+        let p = Packet::new(&bytes[..]).unwrap();
+        assert_eq!(p.msg_id().unwrap_err(), Error::InvalidMessageId);
+    }
+
+    #[test]
+    fn invalid_data_len() {
+        let mut bytes = [0xFF; 32];
+        let mut p = Packet::new_unchecked(&mut bytes[..]);
+        assert!(p.check_len().is_ok());
+        assert_eq!(
+            p.set_data_length(Packet::<&[u8]>::MAX_PAYLOAD_SIZE as u16 + 1)
+                .unwrap_err(),
+            Error::InvalidDataLength
+        );
     }
 }
