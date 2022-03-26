@@ -31,3 +31,8 @@ features = []
 [dev-dependencies]
 pretty_assertions = "1.1"
 approx = "0.5"
+
+[dev-dependencies.proptest]
+version = "1.0"
+default-features = false
+features = ["std"]

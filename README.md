@@ -1,21 +1,15 @@
 # electricui-embedded &emsp; ![ci] [![crates.io]](https://crates.io/crates/electricui-embedded) [![docs.rs]](https://docs.rs/electricui-embedded)
 
 An unofficial and incomplete `no_std` Rust library for
-implementing the [ElectricUI Binary Protocol](https://electricui.com/docs/hardware/protocol).
+implementing the [ElectricUI Binary Protocol][eui-bin-proto].
 
-This is mostly for me to hack on things using their wire protocol currently.
-
-https://github.com/electricui/electricui-embedded
-
-https://electricui.com/docs/
-
-https://electricui.com/docs/hardware/protocol
+See the [ElectricUI docs][eui-docs] or the [ElectricUI C library][eui-c-lib] for more information.
 
 ## Example
 
 See [electricui-embedded-stm32f4-example](https://github.com/jonlamb-gh/electricui-embedded-stm32f4-example).
 
-## Protocol
+## Protocol Diagram
 
 ![protocol](res/protocol.png)
 
@@ -31,3 +25,6 @@ at your option.
 [ci]: https://github.com/jonlamb-gh/electricui-embedded-rs/workflows/CI/badge.svg
 [crates.io]: https://img.shields.io/crates/v/electricui-embedded.svg
 [docs.rs]: https://docs.rs/electricui-embedded/badge.svg
+[eui-docs]: https://electricui.com/docs/
+[eui-bin-proto]: https://electricui.com/docs/hardware/protocol
+[eui-c-lib]: https://github.com/electricui/electricui-embedded

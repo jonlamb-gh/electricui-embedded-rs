@@ -126,16 +126,64 @@ pub enum MessageType {
 }
 
 #[cfg(test)]
+pub(crate) mod propt {
+    use super::*;
+    use proptest::{prelude::*, prop_oneof, std_facade::vec};
+
+    pub fn gen_message_type() -> impl Strategy<Value = MessageType> {
+        prop_oneof![
+            Just(MessageType::Callback),
+            Just(MessageType::Custom),
+            Just(MessageType::OffsetMetadata),
+            Just(MessageType::Byte),
+            Just(MessageType::Char),
+            Just(MessageType::I8),
+            Just(MessageType::U8),
+            Just(MessageType::I16),
+            Just(MessageType::U16),
+            Just(MessageType::I32),
+            Just(MessageType::U32),
+            Just(MessageType::F32),
+            Just(MessageType::F64),
+        ]
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
-
-    // TODO - happy/sad path tests
+    use propt::*;
+    use proptest::prelude::*;
 
     #[test]
     fn internal_ids() {
         assert_eq!(MessageId::INTERNAL_LIB_VER, b"o");
         assert_eq!(MessageId::INTERNAL_BOARD_ID, b"i");
         assert_eq!(MessageId::INTERNAL_HEARTBEAT, b"h");
+        assert_eq!(MessageId::INTERNAL_AM, b"t");
+        assert_eq!(MessageId::INTERNAL_AM_LIST, b"u");
+        assert_eq!(MessageId::INTERNAL_AM_END, b"v");
+        assert_eq!(MessageId::INTERNAL_AV, b"w");
+
+        assert_eq!(MessageId::new(b"name"), Some(MessageId::BOARD_NAME));
+    }
+
+    #[test]
+    fn invalid_ids() {
+        assert_eq!(MessageId::new(&[]), None);
+        assert_eq!(MessageId::new(&[0]), None);
+        let id_bytes: [u8; 16] = [1; 16];
+        assert_eq!(id_bytes.len(), MessageId::MAX_SIZE + 1);
+        assert_eq!(MessageId::new(&id_bytes), None);
+    }
+
+    proptest! {
+        #[test]
+        fn round_trip_message_type(v_in in gen_message_type()) {
+            let wire = v_in.wire_type();
+            let v_out = MessageType::from_wire(wire);
+            assert_eq!(Some(v_in), v_out);
+        }
     }
 }

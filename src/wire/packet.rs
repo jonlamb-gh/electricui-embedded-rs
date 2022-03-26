@@ -584,4 +584,12 @@ mod tests {
             Error::InvalidDataLength
         );
     }
+
+    #[test]
+    fn unknown_msg_type() {
+        let mut bytes = [0x01, 0x14, 0x63, 0x61, 0x62, 0x63, 0x2A, 0xB8, 0xA3];
+        bytes[field::TYPE] = (bytes[field::TYPE] & !0x3C) | (0x0F << 2);
+        let p = Packet::new_unchecked(&mut bytes[..]);
+        assert_eq!(p.typ().unwrap_err(), Error::UnknownMessageType(0x0F));
+    }
 }
