@@ -31,6 +31,10 @@ features = []
 [dev-dependencies]
 pretty_assertions = "1.1"
 approx = "0.5"
+# Stuff for the examples
+serial = "0.4"
+ctrlc = "3.2"
+structopt = "0.3"
 
 [dev-dependencies.proptest]
 version = "1.0"

@@ -7,7 +7,45 @@ See the [ElectricUI docs][eui-docs] or the [ElectricUI C library][eui-c-lib] for
 
 ## Example
 
-See [electricui-embedded-stm32f4-example](https://github.com/jonlamb-gh/electricui-embedded-stm32f4-example).
+See [electricui-embedded-stm32f4-example](https://github.com/jonlamb-gh/electricui-embedded-stm32f4-example)
+for the target portion.
+
+```text
+cargo run --example host -- /dev/ttyUSB0
+
+Requesting board ID
+>> { DataLen(0), Type(8), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
+<< { DataLen(2), Type(8), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }
+Board ID: [EF, BE]
+Requesting name
+>> { DataLen(0), Type(0), Int(0), Offset(0), IdLen(4), Resp(1), Acknum(0) }
+<< { DataLen(8), Type(4), Int(0), Offset(0), IdLen(4), Resp(0), Acknum(0) }
+Name: 'my-board'
+Requesting writable IDs announcement
+>> { DataLen(0), Type(0), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
+<< { DataLen(38), Type(1), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }
+<< { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }
+Message IDs (4):
+  led_blink
+  led_state
+  lit_time
+  my-board
+Got AM_END, count = 4
+Requesting tracked variables
+>> { DataLen(0), Type(0), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
+<< { DataLen(1), Type(6), Int(0), Offset(0), IdLen(9), Resp(0), Acknum(0) }
+Got tracked var Id(led_blink), Type(U8), Data([01])
+<< { DataLen(1), Type(6), Int(0), Offset(0), IdLen(9), Resp(0), Acknum(0) }
+Got tracked var Id(led_state), Type(U8), Data([00])
+<< { DataLen(2), Type(8), Int(0), Offset(0), IdLen(8), Resp(0), Acknum(0) }
+Got tracked var Id(lit_time), Type(U16), Data([C8, 00])
+<< { DataLen(8), Type(4), Int(0), Offset(0), IdLen(8), Resp(0), Acknum(0) }
+Got tracked var Id(my-board), Type(Char), Data([6D, 79, 2D, 62, 6F, 61, 72, 64])
+Requesting heartbeat val=3
+>> { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
+<< { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }
+Got heartbeat val=3
+```
 
 ## Protocol Diagram
 

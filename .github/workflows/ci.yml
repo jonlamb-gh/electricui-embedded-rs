@@ -54,25 +54,25 @@ jobs:
           command: doc
           args: --all-features
 
-      #- name: Build examples
-      #  uses: marcopolo/cargo@master
-      #  with:
-      #    command: build
-      #    working-directory: examples
-      #    args: --release
+      - name: Build examples
+        uses: marcopolo/cargo@master
+        with:
+          command: build
+          working-directory: examples
+          args: --release
 
-      #- name: Clippy examples
-      #  uses: marcopolo/cargo@master
-      #  with:
-      #    command: clippy
-      #    working-directory: examples
+      - name: Clippy examples
+        uses: marcopolo/cargo@master
+        with:
+          command: clippy
+          working-directory: examples
 
-      #- name: Format examples
-      #  uses: marcopolo/cargo@master
-      #  with:
-      #    command: fmt
-      #    working-directory: examples
-      #    args: --all -- --check
+      - name: Format examples
+        uses: marcopolo/cargo@master
+        with:
+          command: fmt
+          working-directory: examples
+          args: --all -- --check
 
   no-std:
     runs-on: ${{ matrix.os }}

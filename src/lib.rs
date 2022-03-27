@@ -9,9 +9,11 @@
 // - add the send APIs and others
 // - tests
 
+pub use crate::error::Error;
+
 pub mod decoder;
-mod error;
-mod message;
+pub mod error;
+pub mod message;
 pub mod prelude;
 mod sealed;
 pub mod wire;
