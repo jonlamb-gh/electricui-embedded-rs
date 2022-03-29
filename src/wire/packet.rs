@@ -26,9 +26,6 @@ pub enum Error {
 
     #[error(display = "Invalid data length")]
     InvalidDataLength,
-
-    #[error(display = "Unknown message type ({})", _0)]
-    UnknownMessageType(u8),
 }
 
 #[derive(Debug, Clone)]
@@ -152,9 +149,9 @@ impl<T: AsRef<[u8]>> Packet<T> {
     }
 
     #[inline]
-    pub fn typ(&self) -> Result<MessageType, Error> {
+    pub fn typ(&self) -> MessageType {
         let typ = self.typ_raw();
-        MessageType::from_wire(typ).ok_or(Error::UnknownMessageType(typ))
+        MessageType::from(typ)
     }
 
     #[inline]
@@ -263,7 +260,7 @@ impl<T: AsRef<[u8]> + AsMut<[u8]>> Packet<T> {
     #[inline]
     pub fn set_typ(&mut self, value: MessageType) {
         let data = self.buffer.as_mut();
-        data[field::TYPE] = (data[field::TYPE] & !0x3C) | (value.wire_type() << 2);
+        data[field::TYPE] = (data[field::TYPE] & !0x3C) | (u8::from(value) << 2);
     }
 
     #[inline]
@@ -429,7 +426,7 @@ mod tests {
         assert_eq!(Packet::<&[u8]>::buffer_len(3, 1), bytes.len());
         let p = Packet::new(&bytes[..]).unwrap();
         assert_eq!(p.data_length(), 1);
-        assert_eq!(p.typ().unwrap(), MessageType::I8);
+        assert_eq!(p.typ(), MessageType::I8);
         assert_eq!(p.internal(), false);
         assert_eq!(p.offset(), false);
         assert_eq!(p.id_length().unwrap(), 3);
@@ -478,7 +475,7 @@ mod tests {
         assert_eq!(Packet::<&[u8]>::buffer_len(3, 4), bytes.len());
         let p = Packet::new(&bytes[..]).unwrap();
         assert_eq!(p.data_length(), 4);
-        assert_eq!(p.typ().unwrap(), MessageType::F32);
+        assert_eq!(p.typ(), MessageType::F32);
         assert_eq!(p.internal(), false);
         assert_eq!(p.offset(), false);
         assert_eq!(p.id_length().unwrap(), 3);
@@ -590,6 +587,6 @@ mod tests {
         let mut bytes = [0x01, 0x14, 0x63, 0x61, 0x62, 0x63, 0x2A, 0xB8, 0xA3];
         bytes[field::TYPE] = (bytes[field::TYPE] & !0x3C) | (0x0F << 2);
         let p = Packet::new_unchecked(&mut bytes[..]);
-        assert_eq!(p.typ().unwrap_err(), Error::UnknownMessageType(0x0F));
+        assert_eq!(p.typ(), MessageType::Unknown(0x0F));
     }
 }

@@ -1,5 +1,5 @@
 use core::convert::TryFrom;
-use core::{fmt, str};
+use core::{cmp, fmt, mem, str};
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[repr(transparent)]
@@ -123,12 +123,84 @@ pub enum MessageType {
     U32,
     F32,
     F64,
+    Unknown(u8),
+}
+
+impl MessageType {
+    pub fn data_wire_size(self, num_elements: usize) -> usize {
+        use MessageType::*;
+        let cnt = cmp::max(1, num_elements);
+        match self {
+            Callback | Custom | Unknown(_) => 0, // Up to the user
+            OffsetMetadata => 0,                 // TODO - add offset support
+            Byte | Char | I8 | U8 => cnt * mem::size_of::<u8>(),
+            I16 | U16 => cnt * mem::size_of::<u16>(),
+            I32 | U32 => cnt * mem::size_of::<u32>(),
+            F32 => cnt * mem::size_of::<f32>(),
+            F64 => cnt * mem::size_of::<f64>(),
+        }
+    }
+}
+
+impl From<u8> for MessageType {
+    fn from(value: u8) -> Self {
+        use MessageType::*;
+        match value {
+            0 => Callback,
+            1 => Custom,
+            2 => OffsetMetadata,
+            3 => Byte,
+            4 => Char,
+            5 => I8,
+            6 => U8,
+            7 => I16,
+            8 => U16,
+            9 => I32,
+            10 => U32,
+            11 => F32,
+            12 => F64,
+            _ => Unknown(value),
+        }
+    }
+}
+
+impl From<MessageType> for u8 {
+    fn from(value: MessageType) -> Self {
+        use MessageType::*;
+        match value {
+            Callback => 0,
+            Custom => 1,
+            OffsetMetadata => 2,
+            Byte => 3,
+            Char => 4,
+            I8 => 5,
+            U8 => 6,
+            I16 => 7,
+            U16 => 8,
+            I32 => 9,
+            U32 => 10,
+            F32 => 11,
+            F64 => 12,
+            Unknown(typ) => typ,
+        }
+    }
+}
+
+impl fmt::Display for MessageType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[cfg(test)]
 pub(crate) mod propt {
     use super::*;
-    use proptest::{prelude::*, prop_oneof, std_facade::vec};
+    use proptest::{
+        collection, num,
+        prelude::*,
+        prop_oneof,
+        std_facade::{vec, Vec},
+    };
 
     pub fn gen_message_type() -> impl Strategy<Value = MessageType> {
         prop_oneof![
@@ -145,7 +217,20 @@ pub(crate) mod propt {
             Just(MessageType::U32),
             Just(MessageType::F32),
             Just(MessageType::F64),
+            gen_unknown_msg_typ(),
         ]
+    }
+
+    prop_compose! {
+        fn gen_unknown_msg_typ()(value in 13_u8..=0x0F_u8) -> MessageType {
+            MessageType::Unknown(value)
+        }
+    }
+
+    prop_compose! {
+        pub fn gen_msg_id_bytes()(bytes in collection::vec(num::u8::ANY, 1..=MessageId::MAX_SIZE)) -> Vec<u8> {
+            bytes
+        }
     }
 }
 
@@ -181,9 +266,23 @@ mod tests {
     proptest! {
         #[test]
         fn round_trip_message_type(v_in in gen_message_type()) {
-            let wire = v_in.wire_type();
-            let v_out = MessageType::from_wire(wire);
-            assert_eq!(Some(v_in), v_out);
+            assert_eq!(v_in.data_wire_size(1), v_in.data_wire_size(0));
+            let wire = u8::from(v_in);
+            let v_out = MessageType::from(wire);
+            assert_eq!(v_in, v_out);
+        }
+
+        #[test]
+        fn round_trip_message_id(id_bytes in gen_msg_id_bytes()) {
+            if id_bytes.len() == 1 && id_bytes[0] == 0 {
+                assert_eq!(MessageId::new(id_bytes.as_ref()), None);
+            } else {
+                let len = id_bytes.len();
+                let s = str::from_utf8(id_bytes.as_ref());
+                let id = MessageId::new(id_bytes.as_ref()).unwrap();
+                assert_eq!(len, id.len());
+                assert_eq!(s, id.as_str());
+            }
         }
     }
 }

@@ -23,24 +23,24 @@ Requesting name
 Name: 'my-board'
 Requesting writable IDs announcement
 >> { DataLen(0), Type(0), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
-<< { DataLen(38), Type(1), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }
+<< { DataLen(34), Type(1), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }
 << { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }
 Message IDs (4):
   led_blink
   led_state
   lit_time
-  my-board
+  name
 Got AM_END, count = 4
 Requesting tracked variables
 >> { DataLen(0), Type(0), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
 << { DataLen(1), Type(6), Int(0), Offset(0), IdLen(9), Resp(0), Acknum(0) }
 Got tracked var Id(led_blink), Type(U8), Data([01])
 << { DataLen(1), Type(6), Int(0), Offset(0), IdLen(9), Resp(0), Acknum(0) }
-Got tracked var Id(led_state), Type(U8), Data([00])
 << { DataLen(2), Type(8), Int(0), Offset(0), IdLen(8), Resp(0), Acknum(0) }
-Got tracked var Id(lit_time), Type(U16), Data([C8, 00])
-<< { DataLen(8), Type(4), Int(0), Offset(0), IdLen(8), Resp(0), Acknum(0) }
-Got tracked var Id(my-board), Type(Char), Data([6D, 79, 2D, 62, 6F, 61, 72, 64])
+Got tracked var Id(led_state), Type(U8), Data([01])
+Got tracked var Id(lit_time), Type(U16), Data([46, 00])
+<< { DataLen(8), Type(4), Int(0), Offset(0), IdLen(4), Resp(0), Acknum(0) }
+Got tracked var Id(name), Type(Char), Data([74, 69, 6D, 65, 46, 00, 53, 62])
 Requesting heartbeat val=3
 >> { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
 << { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }

@@ -263,7 +263,7 @@ fn am_list_resp(buf: &[u8]) -> Result<(), Error> {
 
 fn am_end_resp(buf: &[u8]) -> Result<usize, Error> {
     let p = Packet::new(buf)?;
-    assert_eq!(p.typ()?, MessageType::U8); // TODO - protocol allows for u16 too
+    assert_eq!(p.typ(), MessageType::U8); // TODO - protocol allows for u16 too
     let num_ids = p.payload()?[0];
     println!("Got AM_END, count = {num_ids}");
     Ok(num_ids as _)
@@ -290,7 +290,7 @@ fn tracked_vars_req(buf: &mut [u8]) -> Result<usize, Error> {
 fn tracked_vars_resp(buf: &[u8]) -> Result<(), Error> {
     let p = Packet::new(buf)?;
     let id = p.msg_id()?;
-    let typ = p.typ()?;
+    let typ = p.typ();
     let data = p.payload()?;
     println!("Got tracked var Id({id}), Type({typ:?}), Data({data:02X?})");
     Ok(())
@@ -317,7 +317,7 @@ fn heartbeat_req(val: u8, buf: &mut [u8]) -> Result<usize, Error> {
 
 fn heartbeat_resp(buf: &[u8]) -> Result<u8, Error> {
     let p = Packet::new(buf)?;
-    assert_eq!(p.typ()?, MessageType::U8);
+    assert_eq!(p.typ(), MessageType::U8);
     let val = p.payload()?[0];
     println!("Got heartbeat val={val}");
     Ok(val)
