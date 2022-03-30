@@ -208,6 +208,11 @@ mod tests {
                     assert_eq!(maybe_frame.is_some(), true);
                 }
             }
+
+            // Mix in some junk in between
+            assert!(dec.decode(1).unwrap().is_none());
+            assert!(dec.decode(0).unwrap().is_none());
+            assert!(dec.decode(2).unwrap().is_none());
         }
 
         assert_eq!(dec.count(), 4);

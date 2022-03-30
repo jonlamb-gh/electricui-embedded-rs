@@ -10,6 +10,9 @@ See the [ElectricUI docs][eui-docs] or the [ElectricUI C library][eui-c-lib] for
 See [electricui-embedded-stm32f4-example](https://github.com/jonlamb-gh/electricui-embedded-stm32f4-example)
 for the target portion.
 
+Note: this example is pretty low level and shouldn't be replicated, see the [electricui-cli crate][eui-cli]
+for other patterns and examples.
+
 ```text
 cargo run --example host -- /dev/ttyUSB0
 
@@ -66,3 +69,4 @@ at your option.
 [eui-docs]: https://electricui.com/docs/
 [eui-bin-proto]: https://electricui.com/docs/hardware/protocol
 [eui-c-lib]: https://github.com/electricui/electricui-embedded
+[eui-cli]: https://github.com/jonlamb-gh/electricui-cli

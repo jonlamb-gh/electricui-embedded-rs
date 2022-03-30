@@ -217,9 +217,9 @@ impl<T: AsRef<[u8]>> Packet<T> {
     }
 }
 
-impl<'a, T: AsRef<[u8]> + ?Sized> Packet<&'a T> {
+impl<T: AsRef<[u8]>> Packet<T> {
     #[inline]
-    pub fn msg_id_raw(&self) -> Result<&'a [u8], Error> {
+    pub fn msg_id_raw(&self) -> Result<&[u8], Error> {
         let id_len = self.id_length()?;
         let end = field::REST.start + id_len;
         let data = self.buffer.as_ref();
@@ -228,13 +228,13 @@ impl<'a, T: AsRef<[u8]> + ?Sized> Packet<&'a T> {
     }
 
     #[inline]
-    pub fn msg_id(&self) -> Result<MessageId<'a>, Error> {
+    pub fn msg_id(&self) -> Result<MessageId<'_>, Error> {
         let msg_id = self.msg_id_raw()?;
         MessageId::new(msg_id).ok_or(Error::InvalidMessageId)
     }
 
     #[inline]
-    pub fn payload(&self) -> Result<&'a [u8], Error> {
+    pub fn payload(&self) -> Result<&[u8], Error> {
         let id_len = self.id_length()?;
         let data_len = usize::from(self.data_length());
         let start = field::REST.start + id_len;
