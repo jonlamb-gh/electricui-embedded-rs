@@ -43,7 +43,7 @@ Got tracked var Id(led_blink), Type(U8), Data([01])
 Got tracked var Id(led_state), Type(U8), Data([01])
 Got tracked var Id(lit_time), Type(U16), Data([46, 00])
 << { DataLen(8), Type(4), Int(0), Offset(0), IdLen(4), Resp(0), Acknum(0) }
-Got tracked var Id(name), Type(Char), Data([74, 69, 6D, 65, 46, 00, 53, 62])
+Got tracked var Id(name), Type(Char), Data([6D, 79, 2D, 62, 6F, 61, 72, 64])
 Requesting heartbeat val=3
 >> { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(1), Acknum(0) }
 << { DataLen(1), Type(6), Int(1), Offset(0), IdLen(1), Resp(0), Acknum(0) }

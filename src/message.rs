@@ -1,5 +1,5 @@
 use core::convert::TryFrom;
-use core::{cmp, fmt, mem, str};
+use core::{fmt, mem, str};
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[repr(transparent)]
@@ -127,17 +127,36 @@ pub enum MessageType {
 }
 
 impl MessageType {
-    pub fn data_wire_size(self, num_elements: usize) -> usize {
+    /// Returns the wire size for this MessageType variant.
+    /// Only applicable to data carrying types.
+    pub fn wire_size_hint(self) -> usize {
         use MessageType::*;
-        let cnt = cmp::max(1, num_elements);
         match self {
             Callback | Custom | Unknown(_) => 0, // Up to the user
             OffsetMetadata => 0,                 // TODO - add offset support
-            Byte | Char | I8 | U8 => cnt * mem::size_of::<u8>(),
-            I16 | U16 => cnt * mem::size_of::<u16>(),
-            I32 | U32 => cnt * mem::size_of::<u32>(),
-            F32 => cnt * mem::size_of::<f32>(),
-            F64 => cnt * mem::size_of::<f64>(),
+            Byte | Char | I8 | U8 => mem::size_of::<u8>(),
+            I16 | U16 => mem::size_of::<u16>(),
+            I32 | U32 => mem::size_of::<u32>(),
+            F32 => mem::size_of::<f32>(),
+            F64 => mem::size_of::<f64>(),
+        }
+    }
+
+    /// Returns the wire size for an array of this MessageType variant.
+    /// Only applicable to data carrying types.
+    pub fn array_wire_size_hint(self, num_elements: usize) -> usize {
+        num_elements * self.wire_size_hint()
+    }
+
+    /// Returns the number of elements for this MessageType
+    /// and data payload size.
+    /// Only applicable to data carrying types.
+    pub fn array_wire_length_hint(self, data_size: usize) -> usize {
+        let wire_size = self.wire_size_hint();
+        if wire_size == 0 {
+            0
+        } else {
+            data_size / wire_size
         }
     }
 }
@@ -266,7 +285,6 @@ mod tests {
     proptest! {
         #[test]
         fn round_trip_message_type(v_in in gen_message_type()) {
-            assert_eq!(v_in.data_wire_size(1), v_in.data_wire_size(0));
             let wire = u8::from(v_in);
             let v_out = MessageType::from(wire);
             assert_eq!(v_in, v_out);
@@ -282,6 +300,20 @@ mod tests {
                 let id = MessageId::new(id_bytes.as_ref()).unwrap();
                 assert_eq!(len, id.len());
                 assert_eq!(s, id.as_str());
+            }
+        }
+
+        #[test]
+        fn round_trip_size_helpers(typ in gen_message_type(), num_elements in 1_usize..64_usize) {
+            use MessageType::*;
+            let wire_size = typ.array_wire_size_hint(num_elements);
+            let cnt = typ.array_wire_length_hint(wire_size);
+            match typ {
+                Callback | Custom | Unknown(_) | OffsetMetadata => {
+                    assert_eq!(wire_size, 0);
+                    assert_eq!(cnt, 0);
+                }
+                _ => assert_eq!(cnt, num_elements, "{typ} {wire_size}"),
             }
         }
     }
